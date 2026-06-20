@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全家楊梅永美店 - 3公里精確商圈規劃地圖</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <style>
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Helvetica Neue", Arial, "Noto Sans TC", sans-serif; }
+        #map { width: 100%; height: 100%; z-index: 1; }
+        
+        /* 資訊面板 */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 320px;
+        }
+        .info-panel h1 { margin: 0 0 8px 0; font-size: 18px; color: #333; }
+        .info-panel p { margin: 5px 0; font-size: 13px; color: #666; line-height: 1.4; }
+        
+        /* 圖例 */
+        .legend { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; font-size: 12px; }
+        .legend-color { width: 16px; height: 16px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <div class="info-panel">
+        <h1>精確商圈規劃地圖</h1>
+        <p><strong>中心點：</strong>全家楊梅永美店</p>
+        <p><strong>精確座標：</strong>24.915463, 121.180419</p>
+        <p><strong>規劃範圍：</strong>半徑 3 公里商圈</p>
+        
+        <div class="legend">
+            <div class="legend-item"><span class="legend-color" style="background: #2ca25f; border: 2px solid #fff; box-shadow: 0 0 5px #000;"></span> 中心點 (全家楊梅永美店-綠色)</div>
+            <div class="legend-item"><span class="legend-color" style="background: #2ca25f;"></span> 全家便利商店 (綠色)</div>
+            <div class="legend-item"><span class="legend-color" style="background: #de2d26;"></span> 7-ELEVEn 門市 (紅色)</div>
+            <div class="legend-item"><span class="legend-color" style="background: #e9c46a;"></span> Hi-Life 萊爾富 (黃色)</div>
+            <div class="legend-item"><span class="legend-color" style="background: #9c74c2;"></span> OK 便利商店 (藍紫/淺藍)</div>
+			<div class="legend-item"><span class="legend-color" style="background: #9c74c2;"></span> shu咖啡店 </div>
+            <div class="legend-item"><span class="legend-color" style="background: rgba(255, 0, 0, 0.15); border: 2px solid red;"></span> 3公里商圈範圍</div>
+        </div>
+		
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        // 1. 設定精確中心點座標
+        const centerLat = 24.915462612497656;
+        const centerLng = 121.18041916003187;
+        
+        const map = L.map('map').setView([centerLat, centerLng], 14);
+
+        // 載入地圖底圖
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 2. 定義各品牌圖標顏色 (已校正網址，確保不再破圖)
+        
+        // 中心點（全家楊梅永美店）：依要求改為與全家一致的「綠色」
+        const centerIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
+        // 其他全家超商：綠色
+        const familyIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
+        // 7-11超商：紅色
+        const sevenIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
+        // 萊爾富：維持黃色
+        const hilifeIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
+        // OK超商：修正破圖，改用可用庫中的藍紫色/水藍標記 (violet)
+        const okIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+		
+		const shuIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+		
+
+        // 3. 繪製半徑 3 公里的商圈範圍紅色圈圈
+        L.circle([centerLat, centerLng], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.08,
+            radius: 3000
+        }).addTo(map);
+
+        // 4. 標記您的精確核心起點 (預設開啟 Popup 提示這是中心點)
+        L.marker([centerLat, centerLng], { icon: centerIcon })
+            .addTo(map)
+            .bindPopup("<b>🎯【中心起點】全家楊梅永美店</b><br>座標: " + centerLat + ", " + centerLng)
+            .openPopup();
+
+        // 5. 實際商圈便利商店數據
+        const realStores = [
+            { name: "7-ELEVEN 永誠門市", lat: 24.912646, lng: 121.183411, type: "711" },
+            { name: "7-ELEVEN 欣永美門市", lat: 24.914282, lng: 121.182436, type: "711" },
+            { name: "7-ELEVEN 瑞埔門市", lat: 24.915724, lng: 121.171810, type: "711" },
+            { name: "7-ELEVEN 埔心車站門市", lat: 24.919251, lng: 121.183742, type: "711" },
+            { name: "7-ELEVEN 萬大門市", lat: 24.908207, lng: 121.180424, type: "711" },
+            
+            { name: "全家便利商店 楊梅埔心店", lat: 24.918491, lng: 121.185292, type: "family" },
+            { name: "全家便利商店 楊梅瑞溪店", lat: 24.911852, lng: 121.169724, type: "family" },
+            { name: "全家便利商店 楊梅金山店", lat: 24.925055, lng: 121.175510, type: "family" },
+            
+            { name: "萊爾富便利商店 楊梅桃美店", lat: 24.914840, lng: 121.186580, type: "hilife" },
+            { name: "OK便利商店 疏洪店", lat: 24.916086, lng: 121.181063, type: "OK" },
+			{ name: "shu咖啡店", lat: 24.91961836999532, lng: 121.17999318132209, type: "shu" }
+        ];
+
+        // 6. 循環將超商渲染並標記到地圖上
+        realStores.forEach(function(store) {
+            let icon;
+            if (store.type === "family") {
+                icon = familyIcon;
+            } else if (store.type === "711") {
+                icon = sevenIcon;
+            } else if (store.type === "OK") {
+                icon = okIcon;
+            } 
+		      else if (store.type === "shu") {
+                icon = shuIcon;
+            } 
+			  else {
+                icon = hilifeIcon;
+            }
+            
+            L.marker([store.lat, store.coords ? store.lng : store.lng], { icon: icon })
+                .addTo(map)
+                .bindPopup(`<b>${store.name}</b><br>緯度: ${store.lat}<br>經度: ${store.lng}`);
+        });
+    </script>
+</body>
+</html>
